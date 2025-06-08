@@ -40,22 +40,22 @@
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+
 import {
   fetchTrainMealList,
   createTrainMealOrder
 } from '../api/trainMeal'
+import { useUserStore } from '../store/user' // ✅ 引入登录状态
 
-// 默认图片
-const defaultImg = 'https://cdn-icons-png.flaticon.com/512/2975/2975175.png'
-
-// 状态
+const userStore = useUserStore()
 const route = useRoute()
+
+const defaultImg = 'https://cdn-icons-png.flaticon.com/512/2975/2975175.png'
 const trainId = ref(route.query.trainId || '')
 const menu = ref([])
 const selectedItem = ref(null)
 const loading = ref(false)
 
-// 监听 URL 里的 trainId
 watch(
     () => route.query.trainId,
     (newId) => {
@@ -63,7 +63,7 @@ watch(
     }
 )
 
-// 获取菜单
+// 获取菜单列表
 const getMenu = async () => {
   if (!trainId.value) {
     ElMessage.warning('请输入车次号')
@@ -72,12 +72,9 @@ const getMenu = async () => {
 
   loading.value = true
   try {
-    // 如果你的接口需要对象，例如 { trainNumber: … }，就在这里改：
-    // const res = await fetchTrainMealList({ trainNumber: trainId.value })
     const res = await fetchTrainMealList(trainId.value)
     console.log('[MealOrder] fetchTrainMealList 返回 →', res)
 
-    // 兼容 res.data 本身是数组，或是 res.data.data
     let list = []
     if (Array.isArray(res.data)) {
       list = res.data
@@ -99,24 +96,30 @@ const getMenu = async () => {
   }
 }
 
-// 提交订餐
+// 提交订餐订单
 const submitOrder = async () => {
   if (!selectedItem.value) {
     ElMessage.warning('请选择一项餐品')
     return
   }
 
-  // 假设你有登录逻辑，这里只演示下单
+  const userId = userStore.userInfo?.id
+  if (!userId) {
+    ElMessage.warning('请先登录后再订餐')
+    return
+  }
+
   try {
     const payload = {
-      // 如果后台需要 ticketReservationId，而不是 trainId，请改字段名
+      userId,
       ticketReservationId: trainId.value,
       trainMealId: selectedItem.value.id
     }
     console.log('[MealOrder] createTrainMealOrder 参数 →', payload)
+
     await createTrainMealOrder(payload)
+
     ElMessage.success('订餐成功！')
-    // 下单后可以清空、跳转、刷新菜单等
     selectedItem.value = null
   } catch (err) {
     console.error('[MealOrder] 订餐失败 →', err)
@@ -124,6 +127,7 @@ const submitOrder = async () => {
   }
 }
 </script>
+
 
 <style scoped>
 /* 样式保持不变，不必修改 */
