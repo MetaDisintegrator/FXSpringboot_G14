@@ -23,7 +23,7 @@ public class TrainMealOrder {
     @Column(nullable = false)
     private Integer userId; // 用户ID
     @Column(nullable = false)
-    private Integer seatOrderNumber; // 车票预购表ID
+    private Integer seatOrderId; // 车票预购表ID
     @Column(nullable = false)
     private Integer trainMealId; // 列车餐食ID
     private Integer relatedPaymentId; // 支付模拟系统相关

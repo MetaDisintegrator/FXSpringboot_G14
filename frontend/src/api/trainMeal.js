@@ -11,7 +11,7 @@ export const searchByTrain = (trainId) => request.get(`train/meal/${trainId}`)
 
 export const searchTrainMealOrder = (userId) => request.get(`train/meal/orders/${userId}`)
 
-export const searchTrainMealOrderBySeatOrder = (seatOrderId) => request.get(`train/meal/orders/by-ticket/${userId}`)
+export const searchTrainMealOrderBySeatOrder = (seatOrderId) => request.get(`train/meal/orders/by-ticket/${seatOrderId}`)
 
 export const startPayment = (params) => request.post('/train/meal/get', params)
 

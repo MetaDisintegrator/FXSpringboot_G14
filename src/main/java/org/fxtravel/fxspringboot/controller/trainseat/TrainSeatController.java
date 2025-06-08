@@ -24,8 +24,8 @@ public class TrainSeatController {
     @Autowired
     TrainSeatService trainSeatService;
 
-    @GetMapping("/")
-    public Train getTrain(Integer id) {
+    @GetMapping("/by-id/{id}")
+    public Train getTrain(@PathVariable Integer id) {
         return trainSeatService.getTrainById(id);
     }
 

@@ -146,5 +146,7 @@ export const useUserStore = defineStore('user', {
 
         // 获取用户邮箱（假设userInfo中有email字段）
         email: (state) => state.userInfo?.email || '',
+
+        id: state => state.userInfo?.id,
     },
 })

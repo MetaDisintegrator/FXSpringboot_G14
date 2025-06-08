@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TrainMealOrderResponse {
     private int id;
+    private String OrderNumber;
     private int quantity;
     private double totalAmount;
     private String trainMealName;

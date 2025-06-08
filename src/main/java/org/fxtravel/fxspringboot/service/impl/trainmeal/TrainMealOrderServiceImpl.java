@@ -8,10 +8,8 @@ import org.fxtravel.fxspringboot.common.E_PaymentType;
 import org.fxtravel.fxspringboot.event.EventCenter;
 import org.fxtravel.fxspringboot.event.EventType;
 import org.fxtravel.fxspringboot.event.data.PaymentInfo;
-import org.fxtravel.fxspringboot.mapper.PaymentMapper;
 import org.fxtravel.fxspringboot.mapper.trainmeal.TrainMealOrderMapper;
 import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderDTO;
-import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderQueryDTO;
 import org.fxtravel.fxspringboot.pojo.entities.payment;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMeal;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMealOrder;
@@ -88,7 +86,7 @@ public class TrainMealOrderServiceImpl implements TrainMealOrderService {
         // 3. 创建订单实体
         TrainMealOrder order = new TrainMealOrder();
         order.setUserId(orderDTO.getUserId());
-        order.setSeatOrderNumber(orderDTO.getTicketReservationId());
+        order.setSeatOrderId(orderDTO.getTicketReservationId());
         order.setTrainMealId(orderDTO.getTrainMealId());
         order.setQuantity(orderDTO.getQuantity());
         order.setTotalAmount(totalAmount);

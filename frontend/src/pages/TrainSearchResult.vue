@@ -21,6 +21,18 @@
       />
     </div>
 
+    <!-- 排序选项 -->
+    <div class="sort-options">
+      <label>
+        <input type="radio" v-model="sortBy" value="departure" @change="fetchTrains" />
+        按发车时间排序
+      </label>
+      <label>
+        <input type="radio" v-model="sortBy" value="duration" @change="fetchTrains" />
+        按旅途时间排序
+      </label>
+    </div>
+
     <!-- 主体区域：车次列表 + 筛选栏 -->
     <div class="main-section">
       <!-- 车次列表 区域 -->
@@ -46,7 +58,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { searchByDepartureTime } from '../api/train'
+import { searchByDepartureTime, searchByDuration } from '../api/train'
 
 // 引入子组件
 import ProgressBar from '../components/ProgressBar.vue'
@@ -62,6 +74,9 @@ const router = useRouter()
 const from = ref(route.query.fromCity || '')
 const to = ref(route.query.toCity || '')
 const date = ref(route.query.departureDate || '')
+
+// 排序方式
+const sortBy = ref('departure') // 'departure' 或 'duration'
 
 // 过滤器相关状态
 const onlyAvailable = ref(false)      // "只看有票"
@@ -123,11 +138,19 @@ const fetchTrains = async () => {
     return
   }
   try {
-    const res = await searchByDepartureTime({
+    const params = {
       departureStation: from.value,
       arrivalStation: to.value,
       departureDate: date.value
-    })
+    }
+
+    let res
+    if (sortBy.value === 'duration') {
+      res = await searchByDuration(params)
+    } else {
+      res = await searchByDepartureTime(params)
+    }
+
     // 后端响应格式：{ sortBy, message, data: [ { train:{…}, trainseats:[…] }, … ] }
     console.log('API响应数据:', res.data) // 添加调试日志
     allTrains.value = res.data.data || []
@@ -142,7 +165,7 @@ const initAndFetch = () => {
   from.value = route.query.fromCity || ''
   to.value = route.query.toCity || ''
   date.value = route.query.departureDate || ''
-  
+
   // 只有当有查询参数时才获取数据
   if (route.query.fromCity || route.query.toCity || route.query.departureDate) {
     fetchTrains()
@@ -151,17 +174,17 @@ const initAndFetch = () => {
 
 // 2. 处理浏览器前进/后退操作
 watch(
-  () => route.query,
-  (newQuery) => {
-    from.value = newQuery.fromCity || ''
-    to.value = newQuery.toCity || ''
-    date.value = newQuery.departureDate || ''
-    
-    // 只有当有查询参数时才获取数据
-    if (newQuery.fromCity || newQuery.toCity || newQuery.departureDate) {
-      fetchTrains()
+    () => route.query,
+    (newQuery) => {
+      from.value = newQuery.fromCity || ''
+      to.value = newQuery.toCity || ''
+      date.value = newQuery.departureDate || ''
+
+      // 只有当有查询参数时才获取数据
+      if (newQuery.fromCity || newQuery.toCity || newQuery.departureDate) {
+        fetchTrains()
+      }
     }
-  }
 )
 
 // 3. 在组件挂载时初始化
@@ -215,6 +238,20 @@ const handleLogin = () => {
   top: 24px;
   right: 24px;
   z-index: 10;
+}
+
+/* 排序选项 */
+.sort-options {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 16px;
+}
+
+.sort-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 
 /* 美化登录按钮（此处针对 LoginNotice 内部按钮，也可以删掉） */

@@ -21,3 +21,5 @@ export const doAsync = (orderId) => request.get(`/train/ticket/${orderId}`)
 export const searchTrainSeatOrder = (userId) => request.get(`train/order/get/${userId}`)
 
 export const refundSeat = (params) => request.post(`train/refund`, params)
+
+export const getTrainById = (id) => request.get(`train/by-id/${id}`)

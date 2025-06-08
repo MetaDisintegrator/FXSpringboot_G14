@@ -1,80 +1,130 @@
 <!-- src/pages/MealOrder.vue -->
 <template>
   <div class="meal-page">
-    <h2 class="page-title">火车订餐</h2>
 
-    <!-- 🔍 输入车次 -->
-    <div class="search-box">
-      <input
-          v-model="trainId"
-          placeholder="请输入已购票车次号"
-          @keyup.enter="getMenu"
-      />
-      <button :disabled="loading" @click="getMenu">
-        {{ loading ? '加载中...' : '获取菜单' }}
-      </button>
+    <div class="header">
+      <button class="back-btn" @click="goBack">返回</button>
+      <h2 class="page-title">火车订餐</h2>
     </div>
 
-    <!-- 📋 菜单展示（单选） -->
-    <div v-if="menu.length" class="menu-list">
+    <!-- 列车信息展示 -->
+    <div v-if="userStore.isLoggedIn && trainInfo" class="train-info">
+      <h3>{{ trainInfo.trainNumber }}次列车</h3>
+      <div class="route">
+        <span class="station">{{ trainInfo.fromStation }}</span>
+        <span class="arrow">→</span>
+        <span class="station">{{ trainInfo.toStation }}</span>
+      </div>
+      <div class="time-info">
+        <div class="time-item">
+          <span class="label">发车时间:</span>
+          <span class="value">{{ formatTime(trainInfo.departureTime) }}</span>
+        </div>
+        <div class="time-item">
+          <span class="label">到达时间:</span>
+          <span class="value">{{ formatTime(trainInfo.arrivalTime) }}</span>
+        </div>
+        <div class="time-item">
+          <span class="label">历时:</span>
+          <span class="value">{{ formatDuration(trainInfo.durationMinutes) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登录提示 -->
+    <div v-if="!userStore.isLoggedIn" class="login-tip">
+      <p>请先登录后再订餐</p>
+      <router-link to="/login">前往登录</router-link>
+    </div>
+
+    <!-- 菜单展示 -->
+    <div v-else-if="menu.length" class="menu-list">
       <div class="meal-card" v-for="item in menu" :key="item.id">
-        <img :src="item.image || defaultImg" alt="meal" />
         <div class="info">
           <h4 class="meal-name">{{ item.name }}</h4>
           <p class="meal-desc">{{ item.description }}</p>
           <p class="price">￥{{ item.price.toFixed(2) }}</p>
-          <label class="select-label">
-            <input type="radio" v-model="selectedItem" :value="item" />
-            选择
-          </label>
+          <button class="buy-btn" @click="submitOrder(item)">立即购买</button>
         </div>
       </div>
-      <button class="submit-btn" @click="submitOrder">提交订餐</button>
     </div>
 
-    <div v-else class="tip">暂无菜单，请先输入车次</div>
+    <div v-else class="tip">
+      <span v-if="loading">加载中...</span>
+      <span v-else>暂无可用菜单</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { searchByTrain, startPayment } from '../api/trainMeal'
-import { useUserStore } from '../store/user'
+import {onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {searchByTrain, startPayment} from '../api/trainMeal'
+import {useUserStore} from '../store/user'
+import {storeToRefs} from "pinia";
+import {getTrainById} from "../api/train.js";
 
-// 引入用户store
+const router = useRouter()
 const userStore = useUserStore()
 
-// 默认图片
-const defaultImg = 'https://cdn-icons-png.flaticon.com/512/2975/2975175.png'
+const { id, username } = storeToRefs(userStore)
 
 // 状态
-const route = useRoute()
-const trainId = ref(route.query.trainId || '')
 const menu = ref([])
-const selectedItem = ref(null)
 const loading = ref(false)
 
-// 监听 URL 里的 trainId
-watch(
-    () => route.query.trainId,
-    (newId) => {
-      if (newId) trainId.value = newId
-    }
-)
+// 获取当前座位订单ID
+const getCurrentTrainId = () => {
+  return localStorage.getItem('currestTrainId')
+}
+
+// 新增：响应式数据
+const trainInfo = ref(null)
+
+// 新增：时间格式化方法（不使用dayjs）
+const formatTime = (timeStr) => {
+  try {
+    const date = new Date(timeStr)
+    // 格式化为：YYYY-MM-DD HH:mm
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } catch {
+    return timeStr // 如果解析失败，返回原始字符串
+  }
+}
+
+// 新增：时长格式化方法
+const formatDuration = (minutes) => {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${hours}小时${mins}分钟`
+}
+
+// 新增返回方法
+const goBack = () => {
+  router.push({ name: 'HotelHome' })
+}
 
 // 获取菜单
 const getMenu = async () => {
-  if (!trainId.value) {
-    ElMessage.warning('请输入车次号')
+  const trainId = getCurrentTrainId()
+  if (!trainId) {
+    alert('未找到当前座位订单信息')
     return
   }
 
   loading.value = true
+  console.log(trainId)
   try {
-    const res = await searchByTrain(trainId.value)
-    console.log('[MealOrder] searchByTrain 返回 →', res)
+    const res = await searchByTrain(trainId)
+    trainInfo.value = (await getTrainById(trainId)).data
+    console.log('列车详细信息:', trainInfo)
+    console.log('[MealOrder] searchTrainMealOrderBySeatOrder 返回 →', res)
 
     let list = []
     if (Array.isArray(res.data)) {
@@ -87,48 +137,95 @@ const getMenu = async () => {
 
     menu.value = list
     if (!list.length) {
-      ElMessage.info('该列车暂无可订餐食')
+      alert('当前订单暂无可用餐食')
     }
   } catch (err) {
     console.error('[MealOrder] 获取菜单失败 →', err)
-    ElMessage.error(err.message || '获取菜单失败，请重试')
+    alert(err.message || '获取菜单失败，请重试')
   } finally {
     loading.value = false
   }
 }
 
 // 提交订餐
-const submitOrder = async () => {
-  if (!selectedItem.value) {
-    ElMessage.warning('请选择一项餐品')
-    return
-  }
-
-  // 检查用户是否登录
-  if (!userStore.isLoggedIn) {
-    ElMessage.warning('请先登录后再订餐')
-    return
-  }
-
+const submitOrder = async (item) => {
   try {
     const payload = {
-      userId: userStore.userInfo.id, // 使用真实用户ID
-      ticketReservationId: trainId.value,
-      trainMealId: selectedItem.value.id,
+      userId: id,
+      ticketReservationId: getCurrentTrainId(),
+      trainMealId: item.id,
       quantity: 1
     }
     console.log('[MealOrder] startPayment 参数 →', payload)
     await startPayment(payload)
-    ElMessage.success('订餐成功！')
-    selectedItem.value = null
+    alert('订餐成功！')
   } catch (err) {
     console.error('[MealOrder] 订餐失败 →', err)
-    ElMessage.error(err.message || '订餐失败，请重试')
+    alert(err.message || '订餐失败，请重试')
   }
 }
+
+// 页面加载时自动获取菜单
+onMounted(() => {
+  getMenu()
+})
+
+getMenu()
 </script>
 
 <style scoped>
+/* 新增：列车信息样式 */
+.train-info {
+  background: #f5f7fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.train-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.station {
+  font-weight: bold;
+  color: #1a73e8;
+}
+
+.arrow {
+  margin: 0 12px;
+  color: #666;
+}
+
+.time-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.time-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 12px;
+  color: #666;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .meal-page {
   max-width: 900px;
   margin: 40px auto;
@@ -144,28 +241,17 @@ const submitOrder = async () => {
   color: #333;
   margin: 24px 0;
 }
-.search-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 32px;
+.login-tip {
+  text-align: center;
+  margin: 40px 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
-.search-box input {
-  width: 300px;
-  padding: 10px 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-.search-box button {
-  background: #409cff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
+.login-tip a {
+  color: #409cff;
+  text-decoration: none;
+  font-weight: bold;
 }
 .menu-list {
   display: grid;
@@ -178,42 +264,77 @@ const submitOrder = async () => {
   flex-direction: column;
   background: #fff;
   border-radius: 8px;
-  overflow: hidden;
+  padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-.meal-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-}
 .info {
-  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.select-label {
-  margin-top: 8px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.meal-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
 }
-.submit-btn {
-  display: block;
-  margin: 0 auto 32px;
-  padding: 12px 28px;
+.meal-desc {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+.price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ff6b00;
+  margin: 8px 0;
+}
+.buy-btn {
+  padding: 8px 16px;
   background: #409cff;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: 4px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+.buy-btn:hover {
+  background: #3080e0;
 }
 .tip {
   color: #999;
   text-align: center;
   font-size: 16px;
   margin: 60px 0;
+}
+
+/* 新增头部和返回按钮样式 */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.back-btn {
+  position: absolute;
+  left: 0;
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.back-btn:hover {
+  background: #e0e0e0;
+}
+
+.page-title {
+  text-align: center;
+  flex-grow: 1;
+  margin: 0;
 }
 </style>

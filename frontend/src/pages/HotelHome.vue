@@ -22,26 +22,7 @@
         </div>
         <nav class="nav-links">
           <LoginNotice />
-          <div class="orders-dropdown">
-            <a href="#" @click.prevent="toggleOrdersDropdown">我的订单</a>
-            <div v-if="showOrdersDropdown" class="dropdown-orders">
-              <h4>酒店历史订单</h4>
-              <div v-if="orders.length > 0" class="orders-list">
-                <div v-for="order in orders" :key="order.id" class="order-item">
-                  <div class="order-info">
-                    <span class="hotel-name">{{ order.hotelName }}</span>
-                    <span class="order-date">{{ order.checkInDate }} 至 {{ order.checkOutDate }}</span>
-                    <span class="order-status" :class="getStatusClass(order.status)">
-                      {{ getStatusText(order.status) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="no-orders">
-                <p>暂无订单</p>
-              </div>
-            </div>
-          </div>
+          <a href="#" @click.prevent="go('/orders')">我的订单</a>
           <a href="#" @click.prevent="go('/messages')" class="message-link">消息中心</a>
           <a href="#" @click.prevent="go('/aboutUs')">关于我们</a>
         </nav>
@@ -128,78 +109,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import LoginNotice from "../components/LoginNotice.vue";
-
-const showOrdersDropdown = ref(false)
-
-function toggleOrdersDropdown(e) {
-  e.stopPropagation()
-  showOrdersDropdown.value = !showOrdersDropdown.value
-}
-
-function closeOrdersDropdown() {
-  showOrdersDropdown.value = false
-}
-
-// 点击外部关闭下拉菜单
-onMounted(() => {
-  document.addEventListener('click', closeOrdersDropdown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', closeOrdersDropdown)
-})
-import { getOrderRooms } from '../api/hotel'
-
-const orders = ref([])
-
-async function loadOrders() {
-  try {
-    const userId = localStorage.getItem('userId')
-    if (userId) {
-      const response = await getOrderRooms({ userId })
-      orders.value = response.data || []
-    }
-  } catch (error) {
-    ElMessage.error('获取订单失败')
-  }
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    'unpaid': '待支付',
-    'paid': '已支付',
-    'canceled': '已取消',
-    'completed': '已完成'
-  }
-  return statusMap[status] || status
-}
-
-function getStatusClass(status) {
-  return `status-${status}`
-}
-
-function goToPayment(orderId) {
-  router.push(`/payment?orderId=${orderId}`)
-}
-
-async function cancelOrder(orderId) {
-  try {
-    // 这里需要调用取消订单的API
-    await cancelOrderRoom({ orderId })
-    ElMessage.success('订单已取消')
-    loadOrders()
-  } catch (error) {
-    ElMessage.error('取消订单失败')
-  }
-}
-
-onMounted(() => {
-  loadOrders()
-})
 
 const router = useRouter()
 const route = useRoute()
@@ -337,11 +250,6 @@ const rankHotels = [
 ]
 // 点击搜索：跳转到 HotelSearch 并传递查询参数
 function handleSearch() {
-  if (!searchCity.value || !checkIn.value || !checkOut.value) {
-    ElMessage.warning('请填写完整的搜索条件')
-    return
-  }
-  
   router.push({
     name: 'HotelSearch',
     query: {
@@ -705,7 +613,7 @@ function handleSearch() {
 .nav-links a:hover::after {
   width: 100%;
 }
-.nav-links a:hover { 
+.nav-links a:hover {
   color: #1677ff;
 }
 .nav-links a:hover { color: #1677ff; }
@@ -804,109 +712,5 @@ function handleSearch() {
 /* 给“消息中心”链接多一点左侧 padding，以对齐图标与文字 */
 .message-link {
   padding-left: 12px;
-}
-/* 订单下拉菜单样式 */
-.orders-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.orders-dropdown > a {
-  margin-left: 24px;
-  color: #333;
-  font-weight: 500;
-  text-decoration: none;
-  position: relative;
-  padding-bottom: 5px;
-}
-
-.orders-dropdown > a::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: #1677ff;
-  transition: width 0.3s ease;
-}
-
-.orders-dropdown > a:hover::after {
-  width: 100%;
-}
-
-.dropdown-orders {
-  position: absolute;
-  top: 100%;
-  left: 24px;
-  width: 400px;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  padding: 15px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.dropdown-orders h4 {
-  margin-bottom: 15px;
-  color: #1677ff;
-}
-
-.order-item {
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.order-item:last-child {
-  border-bottom: none;
-}
-
-.order-info {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.hotel-name {
-  font-weight: bold;
-}
-
-.order-date {
-  font-size: 12px;
-  color: #666;
-}
-
-.order-status {
-  font-size: 12px;
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-
-.status-unpaid {
-  background: #ffecb3;
-  color: #ff9800;
-}
-
-.status-paid {
-  background: #c8e6c9;
-  color: #4caf50;
-}
-
-.status-canceled {
-  background: #ffcdd2;
-  color: #f44336;
-}
-
-.status-completed {
-  background: #bbdefb;
-  color: #2196f3;
-}
-
-.no-orders {
-  text-align: center;
-  padding: 20px;
-  color: #999;
 }
 </style>

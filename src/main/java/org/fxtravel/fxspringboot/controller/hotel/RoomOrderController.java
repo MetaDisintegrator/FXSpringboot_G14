@@ -3,7 +3,10 @@ package org.fxtravel.fxspringboot.controller.hotel;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.fxtravel.fxspringboot.common.Role;
+import org.fxtravel.fxspringboot.mapper.hotel.HotelMapper;
+import org.fxtravel.fxspringboot.mapper.hotel.RoomMapper;
 import org.fxtravel.fxspringboot.pojo.dto.hotel.BookHotelRequest;
+import org.fxtravel.fxspringboot.pojo.dto.hotel.RoomOrderResponse;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentRequest;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentResultDTO;
 import org.fxtravel.fxspringboot.pojo.entities.RoomOrder;
@@ -17,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +31,10 @@ public class RoomOrderController {
     private RoomOrderService roomOrderService;
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private HotelMapper hotelMapper;
+    @Autowired
+    private RoomMapper roomMapper;
 
     @PostMapping("/room/get")
     public ResponseEntity<?> getRoom(@Valid @RequestBody BookHotelRequest request,
@@ -76,8 +84,25 @@ public class RoomOrderController {
     }
 
     @GetMapping("/orders/{userId}")
-    public ResponseEntity<List<RoomOrder>> getOrderByUserId(@PathVariable Integer userId) {
-        return ResponseEntity.ok(roomOrderService.getOrdersByUserId(userId));
+    public ResponseEntity<List<RoomOrderResponse>> getOrderByUserId(@PathVariable Integer userId) {
+        List<RoomOrder> orders = roomOrderService.getOrdersByUserId(userId);
+        List<RoomOrderResponse> roomOrderResponses = new ArrayList<>();
+        for (RoomOrder order : orders) {
+            RoomOrderResponse roomOrderResponse = new RoomOrderResponse(
+                    order.getId(),
+                    order.getOrderNumber(),
+                    order.getUserId(),
+                    hotelMapper.selectById(order.getHotelId()).getName(),
+                    roomMapper.selectById(order.getRoomId()).getName(),
+                    order.getCheckInDate(),
+                    order.getCheckOutDate(),
+                    order.getStatus(),
+                    order.getTotalAmount(),
+                    order.getCreateTime()
+            );
+            roomOrderResponses.add(roomOrderResponse);
+        }
+        return ResponseEntity.ok(roomOrderResponses);
     }
 
     @PostMapping("/refund")

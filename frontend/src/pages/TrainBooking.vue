@@ -7,7 +7,7 @@
       <!-- 订单信息展示 -->
       <div class="info">
         <p><strong>订单编号：</strong>{{ orderNumber }}</p>
-        <p><strong>车次：</strong>{{ trainId }}</p>
+        <p><strong>车次：</strong>{{ trainNumber }}</p>
         <p><strong>出发城市：</strong>{{ from }}</p>
         <p><strong>到达城市：</strong>{{ to }}</p>
         <p><strong>出发时间：</strong>{{ formatDateTime(departTime) }}</p>
@@ -64,6 +64,7 @@ const router = useRouter()
 const orderNumber = ref(route.query.number || '')
 const id = ref(route.query.id || '')
 const trainId = ref(route.query.trainId || '')
+const trainNumber = ref(route.query.trainNumber || '')
 const from = ref(route.query.from || '')
 const to = ref(route.query.to || '')
 const departTime = ref(route.query.departTime || '')
@@ -76,7 +77,7 @@ const payLoading = ref(false)
 const cancelLoading = ref(false)
 const pollingInterval = ref(null)
 const pollingMessage = ref('')
-const remainingTime = ref(300) // 默认5分钟支付时限
+const remainingTime = ref(400) // 默认5分钟支付时限
 const isPolling = ref(false)
 
 // 方案1：确保 onMounted 触发
@@ -109,14 +110,7 @@ function startPolling() {
   // 立即检查一次
   checkOrderStatus()
 
-  // 设置轮询（每0.5秒一次）
   pollingInterval.value = setInterval(() => {
-    remainingTime.value -= 1.0
-    if (remainingTime.value <= 0) {
-      stopPolling()
-      pollingMessage.value = '支付超时，订单已自动取消'
-      return
-    }
     checkOrderStatus()
   }, 1000)
 }
@@ -141,7 +135,7 @@ async function checkOrderStatus() {
     if (data.currentStatus === 'COMPLETED') {
       handlePaymentSuccess()
     } else if (data.currentStatus === 'FAILED') {
-      handlePaymentFailure(data.message || '支付失败')
+      await handlePaymentFailure('超时或主动放弃')
     }
   } catch (error) {
     console.error('轮询请求失败:', error)
@@ -152,8 +146,11 @@ async function checkOrderStatus() {
 async function handlePayment() {
   payLoading.value = true
   try {
-    await complete({ orderNumber: orderNumber.value })
-    pollingMessage.value = '支付请求已提交，请稍候...'
+    const payRes = await complete({ orderNumber: orderNumber.value })
+    console.log(payRes)
+    if (payRes.value) {
+      pollingMessage.value = '支付请求已提交，请稍候...'
+    }
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '支付请求失败')
   } finally {
@@ -165,9 +162,7 @@ async function handlePayment() {
 async function handleCancel() {
   cancelLoading.value = true
   try {
-    await fail({ orderNumber: orderNumber.value })
-    ElMessage.success('订单已取消')
-    router.push({ name: 'TrainHome' })
+    await fail({ orderNumber: orderNumber.value , data: seat.value })
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '取消失败')
   } finally {
@@ -178,6 +173,7 @@ async function handleCancel() {
 // 支付成功处理
 function handlePaymentSuccess() {
   stopPolling()
+  localStorage.setItem('currestTrainId', trainId.value)
   pollingMessage.value = '支付成功，正在跳转...'
   setTimeout(() => {
     router.push({
@@ -188,10 +184,10 @@ function handlePaymentSuccess() {
 }
 
 // 支付失败处理
-function handlePaymentFailure(message) {
+async function handlePaymentFailure(message) {
   stopPolling()
   pollingMessage.value = message
-  ElMessage.error(message)
+  router.push({name: 'HotelHome'})
 }
 
 // 格式化时间

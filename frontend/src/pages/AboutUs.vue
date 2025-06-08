@@ -21,8 +21,6 @@
           <span class="site-name">风行旅行</span>
         </div>
         <nav class="nav-links">
-          <a @click.prevent="goLogin" class="nav-link">登录</a>
-          <a @click.prevent="goRegister" class="nav-link">注册</a>
           <a @click.prevent="goOrders" class="nav-link">我的订单</a>
           <a @click.prevent="goAbout" class="nav-link active">关于我们</a>
         </nav>

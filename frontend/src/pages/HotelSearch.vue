@@ -22,17 +22,7 @@
         </div>
         <nav class="nav-links">
           <template v-if="!isLoggedIn">
-            <a href="#" @click.prevent="go('/auth')">登录/注册</a>
-          </template>
-          <template v-else>
-            <div class="user-info">
-              <img :src="avatarUrl" class="avatar" />
-              <span class="nickname">{{ username }}</span>
-              <div class="dropdown">
-                <a href="#" @click.prevent="go('/orders')">我的订单</a>
-                <a href="#" @click.prevent="logout">退出登录</a>
-              </div>
-            </div>
+            <LoginNotice/>
           </template>
           <a href="#" @click.prevent="go('/messages')" class="message-link">消息中心</a>
           <a href="#" @click.prevent="go('/aboutUs')">关于我们</a>
@@ -195,6 +185,7 @@ import { searchHotels, bookRoom, fetchHotelDetail } from '../api/hotel'
 import { complete } from '../api/pay'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
+import LoginNotice from "../components/LoginNotice.vue";
 
 // 预订相关状态
 const bookingDialogVisible = ref(false)

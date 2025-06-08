@@ -64,7 +64,8 @@ const userId = userStore.userInfo?.id  // 👈 获取当前用户 id
 
 async function bookSeat(seatItem) {
   const payload = {
-    trainId: props.train.trainNumber,
+    trainId: props.train.id,
+    trainNumber: props.train.trainNumber,
     from: props.train.fromStation,
     to: props.train.toStation,
     departTime: props.train.departureTime,

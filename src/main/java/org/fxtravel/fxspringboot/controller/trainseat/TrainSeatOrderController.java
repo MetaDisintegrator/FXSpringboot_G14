@@ -108,6 +108,7 @@ public class TrainSeatOrderController {
 
                     return new TrainSeatOrderDTO(
                             order.getId(),
+                            order.getOrderNumber(),
                             order.getUserId(),
                             train,
                             seat,  // 使用预加载的座位数据
