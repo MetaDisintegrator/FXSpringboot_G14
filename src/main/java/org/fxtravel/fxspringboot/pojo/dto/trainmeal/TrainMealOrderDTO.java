@@ -14,13 +14,5 @@ public class TrainMealOrderDTO {
     private Integer userId;
     private Integer ticketReservationId;
     private Integer trainMealId;
-    @Nullable
-    private Integer relatedPaymentId;
-    @Nullable
-    private E_PaymentStatus status;
     private Integer quantity;
-    @Nullable
-    private Double totalAmount;
-    @Nullable
-    private LocalDateTime createTime;
 }

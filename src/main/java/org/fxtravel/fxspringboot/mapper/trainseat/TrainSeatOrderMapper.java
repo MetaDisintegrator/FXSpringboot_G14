@@ -13,8 +13,8 @@ import java.util.List;
 
 @Mapper
 public interface TrainSeatOrderMapper extends BaseMapper<TrainSeatOrder> {
-    @Select("SELECT EXISTS(SELECT 1 FROM train_seat_order WHERE " +
-            "train_seat_id = #{trainSeatID} AND user_id = #{userID}) AND status = 'COMPLETED'")
+    @Select("SELECT EXISTS (SELECT 1 FROM train_seat_order WHERE " +
+            "train_seat_id = #{trainSeatID} AND user_id = #{userID} AND status = 'COMPLETED')")
     boolean existsBySeatAndUser(@Param("trainSeatID") Integer trainSeatID, @Param("userID") Integer userID);
 
     @Select("SELECT * FROM train_seat_order WHERE user_id = #{userID}")

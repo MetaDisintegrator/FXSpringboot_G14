@@ -55,6 +55,7 @@
         >
           <el-card class="order-card">
             <div class="info">
+              <p><strong>订单号：</strong>{{ order.id }}</p>
               <p><strong>车次：</strong>{{ order.train.trainNumber }}</p>
               <p><strong>出发：</strong>{{ order.train.fromStation }}</p>
               <p><strong>到达：</strong>{{ order.train.toStation }}</p>
@@ -62,6 +63,8 @@
                 <strong>出发时间：</strong
                 >{{ formatTime(order.train.departureTime) }}
               </p>
+              <p><strong>车型：</strong>{{ order.train.trainType }}</p>
+              <p><strong>座位类型：</strong>{{ order.trainSeat.seatType }}</p>
               <p><strong>状态：</strong>{{ formatStatus(order.status) }}</p>
             </div>
             <div class="actions">
@@ -93,10 +96,11 @@
         >
           <el-card class="order-card">
             <div class="info">
-              <p><strong>车次：</strong>{{ meal.trainNumber }}</p>
-              <p><strong>餐品：</strong>{{ meal.items?.join('、') }}</p>
-              <p><strong>金额：</strong>￥{{ meal.total }}</p>
+              <p><strong>车次订单号：</strong>{{ meal.reservationSeatOrderNumber }}</p>
+              <p><strong>餐品：</strong>{{ meal.trainMealName }}</p>
+              <p><strong>金额：</strong>￥{{ meal.totalAmount }}</p>
               <p><strong>状态：</strong>{{ formatStatus(meal.status) }}</p>
+              <p><strong>订单生成时间：</strong>{{ formatTime(meal.createTime) }}</p>
             </div>
             <div class="actions">
               <el-button size="small" @click="copyMeal(meal)"
@@ -115,7 +119,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store/user'
-import { searchTrainSeatOrder } from '../api/train' // ✅ 引入接口封装
+import { searchTrainSeatOrder } from '../api/train' 
+import { searchTrainMealOrder } from '../api/trainMeal'
+
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -154,8 +160,8 @@ async function fetchOrders() {
     ticketOrders.value = ticketRes?.data || []
 
     // ✅ 保留原来的订餐订单（你可以封装成接口再替换）
-    const mealRes = await fetch(`/api/train_meal_order/user/${userId}`).then(r => r.json())
-    mealOrders.value = mealRes || []
+    const mealRes = await searchTrainMealOrder(userId)
+    mealOrders.value = mealRes?.data.data || []
   } catch (e) {
     console.error(e)
     ElMessage.error('订单加载失败')

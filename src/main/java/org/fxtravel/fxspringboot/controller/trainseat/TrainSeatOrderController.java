@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -81,7 +82,7 @@ public class TrainSeatOrderController {
     public ResponseEntity<PaymentResultDTO> getOrderPaymentStatus(@PathVariable Integer orderId) {
         TrainSeatOrder order = trainSeatOrderService.getOrderById(orderId);
         if (order == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "id not found");
         }
 
         PaymentResultDTO result = order.getRelatedPaymentId() != null ?

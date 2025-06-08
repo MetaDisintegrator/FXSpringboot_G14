@@ -2,10 +2,12 @@ package org.fxtravel.fxspringboot.controller.trainmeal;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.fxtravel.fxspringboot.mapper.trainmeal.TrainMealMapper;
 import org.fxtravel.fxspringboot.mapper.trainseat.TrainSeatOrderMapper;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentRequest;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentResultDTO;
 import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderDTO;
+import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderResponse;
 import org.fxtravel.fxspringboot.pojo.entities.User;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMeal;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMealOrder;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +40,8 @@ public class TrainMealOrderController {
 
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private TrainMealMapper trainMealMapper;
 
     @GetMapping("/orders/{userId}")
     public ResponseEntity<?> getOrdersByUser(@PathVariable Integer userId,
@@ -47,9 +52,22 @@ public class TrainMealOrderController {
         }
 
         List<TrainMealOrder> orders = trainMealOrderService.getOrdersByUser(userId);
+        List<TrainMealOrderResponse> orderResponses = new ArrayList<>();
+        for (TrainMealOrder order : orders) {
+            TrainMealOrderResponse orderResponse = new TrainMealOrderResponse(
+                    order.getId(),
+                    order.getQuantity(),
+                    order.getTotalAmount(),
+                    trainMealMapper.selectById(order.getTrainMealId()).getName(),
+                    order.getOrderNumber(),
+                    order.getStatus(),
+                    order.getCreateTime()
+            );
+            orderResponses.add(orderResponse);
+        }
         return ResponseEntity.ok(Map.of(
                 "message", "查询成功",
-                "data", orders
+                "data", orderResponses
         ));
     }
 
@@ -94,7 +112,7 @@ public class TrainMealOrderController {
         ));
     }
 
-    @GetMapping("/{orderId}")
+    @GetMapping("/status/{orderId}")
     public ResponseEntity<?> getOrderPaymentStatus(@PathVariable Integer orderId) {
         TrainMealOrder order = trainMealOrderService.getOrderById(orderId);
         if (order == null) {

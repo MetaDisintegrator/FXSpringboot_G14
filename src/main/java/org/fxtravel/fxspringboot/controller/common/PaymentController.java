@@ -25,12 +25,6 @@ public class PaymentController {
         return ResponseEntity.ok(result);
     }
 
-//    @PostMapping("/refund")
-//    public ResponseEntity<Boolean> refundPayment(@RequestBody PaymentRequest request) {
-//        boolean result = paymentService.refundPayment(request.getOrderNumber(), request.getData());
-//        return ResponseEntity.ok(result);
-//    }
-
     @PostMapping("/finish")
     public ResponseEntity<Boolean> finishPayment(@RequestBody PaymentRequest request) {
         boolean result = paymentService.finishPayment(request.getOrderNumber(), request.getData());

@@ -77,23 +77,28 @@ async function bookSeat(seatItem) {
 
   try {
     const { data } = await startPayment(payload)
-    // data = { id: 1665441794, number: 'A01', message: '车票生成成功', seat: 'A01' }
 
     if (data.message) {
       ElMessage.success(data.message)
     }
-    // 后端把票号返回在 number 字段里
+
+    // 确保获取到 id 和 number
+    const orderId = data.id
     const orderNumber = data.number
-    if (!orderNumber) {
-      ElMessage.error('下单失败：未获取票号')
+    const seat = data.seat
+
+    if (!orderId || !orderNumber) {
+      ElMessage.error('下单失败：未获取订单信息')
       return
     }
 
-    router.push({
+    await router.push({
       name: 'TrainBooking',
       query: {
         ...payload,
-        orderNumber
+        id: orderId,
+        number: orderNumber,
+        seat: seat
       }
     })
   } catch (err) {

@@ -17,7 +17,7 @@ public interface TrainMealOrderMapper extends BaseMapper<TrainMealOrder> {
     @Select("SELECT * FROM train_meal_order WHERE seat_order_Id = #{seatOrderId}")
     List<TrainMealOrder> selectBySeatOrder(Integer seatOrderId);
 
-    @Select("SELECT 1 FROM train_meal_order WHERE seat_order_Id = #{seatOrderId}")
+    @Select("SELECT EXISTS(SELECT 1 FROM train_meal_order WHERE seat_order_Id = #{seatOrderId})")
     boolean existsBySeatOrderId(Integer seatOrderId);
 
     // 更新订单状态

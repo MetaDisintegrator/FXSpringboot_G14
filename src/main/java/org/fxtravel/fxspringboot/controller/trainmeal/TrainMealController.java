@@ -21,14 +21,14 @@ public class TrainMealController {
     @Autowired
     private TrainMealService trainMealService;
 
-    @GetMapping("/")
-    public ResponseEntity<?> getUserMeals(@RequestParam Integer trainId,
-                                                        BindingResult bindingResult,
+    @GetMapping("/{trainId}")
+    public ResponseEntity<?> getUserMeals(@PathVariable Integer trainId,
                                                         HttpSession session) {
         User user = (User) session.getAttribute("user");
 
-        ResponseEntity<? extends Map<String, ?>> errors = AuthUtil.check(bindingResult, user);
-        if (errors != null) return errors;
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未登录"));
+        }
 
 
 

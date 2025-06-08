@@ -31,6 +31,7 @@ public class TrainMealOrder {
     private Integer quantity; // 购买数量
     @Column(nullable = false)
     private Double totalAmount; // 总金额
+    @Enumerated(EnumType.STRING)
     private E_PaymentStatus status; // 与关联的payment状态同步，只是便于查询使用
     private LocalDateTime createTime; // 创建时间
 }

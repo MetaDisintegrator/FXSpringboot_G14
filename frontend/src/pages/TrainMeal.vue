@@ -40,22 +40,23 @@
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { searchByTrain, startPayment } from '../api/trainMeal'
+import { useUserStore } from '../store/user'
 
-import {
-  fetchTrainMealList,
-  createTrainMealOrder
-} from '../api/trainMeal'
-import { useUserStore } from '../store/user' // ✅ 引入登录状态
-
+// 引入用户store
 const userStore = useUserStore()
-const route = useRoute()
 
+// 默认图片
 const defaultImg = 'https://cdn-icons-png.flaticon.com/512/2975/2975175.png'
+
+// 状态
+const route = useRoute()
 const trainId = ref(route.query.trainId || '')
 const menu = ref([])
 const selectedItem = ref(null)
 const loading = ref(false)
 
+// 监听 URL 里的 trainId
 watch(
     () => route.query.trainId,
     (newId) => {
@@ -63,7 +64,7 @@ watch(
     }
 )
 
-// 获取菜单列表
+// 获取菜单
 const getMenu = async () => {
   if (!trainId.value) {
     ElMessage.warning('请输入车次号')
@@ -72,8 +73,8 @@ const getMenu = async () => {
 
   loading.value = true
   try {
-    const res = await fetchTrainMealList(trainId.value)
-    console.log('[MealOrder] fetchTrainMealList 返回 →', res)
+    const res = await searchByTrain(trainId.value)
+    console.log('[MealOrder] searchByTrain 返回 →', res)
 
     let list = []
     if (Array.isArray(res.data)) {
@@ -96,29 +97,28 @@ const getMenu = async () => {
   }
 }
 
-// 提交订餐订单
+// 提交订餐
 const submitOrder = async () => {
   if (!selectedItem.value) {
     ElMessage.warning('请选择一项餐品')
     return
   }
 
-  const userId = userStore.userInfo?.id
-  if (!userId) {
+  // 检查用户是否登录
+  if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录后再订餐')
     return
   }
 
   try {
     const payload = {
-      userId,
+      userId: userStore.userInfo.id, // 使用真实用户ID
       ticketReservationId: trainId.value,
-      trainMealId: selectedItem.value.id
+      trainMealId: selectedItem.value.id,
+      quantity: 1
     }
-    console.log('[MealOrder] createTrainMealOrder 参数 →', payload)
-
-    await createTrainMealOrder(payload)
-
+    console.log('[MealOrder] startPayment 参数 →', payload)
+    await startPayment(payload)
     ElMessage.success('订餐成功！')
     selectedItem.value = null
   } catch (err) {
@@ -128,9 +128,7 @@ const submitOrder = async () => {
 }
 </script>
 
-
 <style scoped>
-/* 样式保持不变，不必修改 */
 .meal-page {
   max-width: 900px;
   margin: 40px auto;
