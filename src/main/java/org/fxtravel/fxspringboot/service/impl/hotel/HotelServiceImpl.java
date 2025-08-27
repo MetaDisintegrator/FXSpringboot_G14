@@ -48,7 +48,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
     // 处理支付状态变更的回调方法
-    private void handlePaymentStatusChange(PaymentInfo info) {
+    public void handlePaymentStatusChange(PaymentInfo info) {
         switch (info.getNewStatus()){
             case FAILED:
             case REFUNDED:
