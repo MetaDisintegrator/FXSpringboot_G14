@@ -8,12 +8,12 @@ let mockUserStore
 
 // mock vue-router 的 useRouter
 vi.mock('vue-router', () => ({
-    useRouter: () => mockRouter
+    useRouter: () => mockRouter,
 }))
 
 // mock store：返回当前用例的 mockUserStore
 vi.mock('@/store/user', () => ({
-    useUserStore: () => mockUserStore
+    useUserStore: () => mockUserStore,
 }))
 
 describe('AuthForm.vue', () => {
@@ -22,7 +22,7 @@ describe('AuthForm.vue', () => {
         mockRouter = { push: vi.fn() }
         mockUserStore = {
             login: vi.fn(),
-            register: vi.fn()
+            register: vi.fn(),
         }
     })
 
@@ -32,26 +32,25 @@ describe('AuthForm.vue', () => {
     })
 
     // ---------- 登录 ----------
-    it('登录：显示用户名与密码，提交成功后发出 success 并跳转 /train', async () => {
+    it('登录：显示邮箱与密码，提交成功后发出 success 并跳转 /train', async () => {
         const { emitted } = render(AuthForm, { props: { type: 'login' } })
 
         // 登陆成功
         mockUserStore.login.mockResolvedValueOnce(true)
 
-        // 界面字段可见性
-        expect(screen.queryByPlaceholderText('邮箱')).toBeNull()
-        const userInput = screen.getByPlaceholderText('用户名')
+        // 界面字段可见性（登录页应看到“邮箱/密码”）
+        const emailInput = screen.getByPlaceholderText('邮箱')
         const pwdInput = screen.getByPlaceholderText('密码')
         const btn = screen.getByRole('button', { name: '登 录' })
 
-        await fireEvent.update(userInput, 'user@example.com') // 你的实现里用 username 填到 email
+        await fireEvent.update(emailInput, 'user@example.com')
         await fireEvent.update(pwdInput, '123456')
         await fireEvent.click(btn)
 
         // 调用 userStore.login
         expect(mockUserStore.login).toHaveBeenCalledWith({
             email: 'user@example.com',
-            password: '123456'
+            password: '123456',
         })
 
         // 触发事件 & 跳转
@@ -63,7 +62,7 @@ describe('AuthForm.vue', () => {
         render(AuthForm, { props: { type: 'login' } })
         mockUserStore.login.mockResolvedValueOnce(false)
 
-        await fireEvent.update(screen.getByPlaceholderText('用户名'), 'who@x.com')
+        await fireEvent.update(screen.getByPlaceholderText('邮箱'), 'who@x.com')
         await fireEvent.update(screen.getByPlaceholderText('密码'), 'bad')
         await fireEvent.click(screen.getByRole('button', { name: '登 录' }))
 
@@ -74,12 +73,11 @@ describe('AuthForm.vue', () => {
 
     // ---------- 注册 ----------
     it('注册：缺少必填项时给出“请完整填写所有信息”', async () => {
-        render(AuthForm, { props: { type: 'register' } });
+        render(AuthForm, { props: { type: 'register' } })
 
-        await fireEvent.click(screen.getByRole('button', { name: /注\s*册/i }));
-        expect(screen.getByText('请完整填写所有信息')).toBeInTheDocument();
-    });
-
+        await fireEvent.click(screen.getByRole('button', { name: /注\s*册/i }))
+        expect(screen.getByText('请完整填写所有信息')).toBeInTheDocument()
+    })
 
     it('注册：两次密码不一致时提示错误，不调用 userStore.register', async () => {
         render(AuthForm, { props: { type: 'register' } })
@@ -113,7 +111,7 @@ describe('AuthForm.vue', () => {
             username: 'Bob',
             password: 'pass123',
             gender: 'FEMALE',
-            role: 'REGULAR'
+            role: 'REGULAR',
         })
         expect(emitted().success?.[0]?.[0]).toBe('注册成功')
         expect(mockRouter.push).toHaveBeenCalledWith({ name: 'train' })
@@ -142,10 +140,10 @@ describe('AuthForm.vue', () => {
         expect(await screen.findByText(/请完整|两次密码/)).toBeInTheDocument()
 
         await rerender({ type: 'login' })
-        // login 模式应只看到 用户名/密码；错误已清空
-        expect(screen.getByPlaceholderText('用户名')).toBeInTheDocument()
+        // login 模式应只看到 邮箱/密码；错误已清空
+        expect(screen.getByPlaceholderText('邮箱')).toBeInTheDocument()
         expect(screen.getByPlaceholderText('密码')).toBeInTheDocument()
-        expect(screen.queryByPlaceholderText('邮箱')).toBeNull()
+        expect(screen.queryByPlaceholderText('用户名')).toBeNull()
         expect(screen.queryByText(/请完整|两次密码/)).toBeNull()
     })
 })
