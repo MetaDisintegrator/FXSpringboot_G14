@@ -55,7 +55,7 @@
           <div v-else class="message-list">
             <el-card
               v-for="msg in messages"
-              :key="msg.id"
+              :key="msg.mealId"
               class="message-card fade-in-card"
               :body-style="{ padding: '12px 16px' }"
               @click="markAsRead(msg)"
@@ -182,7 +182,7 @@ onMounted(() => {
 function getCurrentUserId() {
   // 假设 localStorage 中存放了 user 对象
   const u = localStorage.getItem('currentUser')
-  return u ? JSON.parse(u).id : 0
+  return u ? JSON.parse(u).mealId : 0
 }
 
 // 根据不同 eventType 返回不同图标类名

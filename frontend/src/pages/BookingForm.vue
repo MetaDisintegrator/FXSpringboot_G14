@@ -120,7 +120,7 @@ const submitBooking = () => {
     const [checkIn, checkOut] = form.dates
     const payload = {
       userId: 'U1001',
-      hotelId: route.query.hotelId || hotel.id,
+      hotelId: route.query.hotelId || hotel.mealId,
       roomTypeId: form.roomTypeId,
       checkInDate: checkIn,
       checkOutDate: checkOut

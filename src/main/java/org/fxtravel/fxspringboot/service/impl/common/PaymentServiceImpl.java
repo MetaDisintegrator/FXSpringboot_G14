@@ -41,6 +41,10 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public payment createPayment(Integer userId, E_PaymentType type, Double amount,
                                  Integer relatedId, Integer quantity, Integer goodId) {
+        if (userId == null || type == null || amount == null || relatedId == null ||
+                quantity == null || goodId == null || amount < 0 || quantity <= 0) {
+            throw new IllegalArgumentException("Invalid payment parameters");
+        }
         payment payment = new payment();
         payment.setUserId(userId);
         payment.setType(type);
@@ -75,8 +79,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     // 创建通知
-    private void notifyPaymentCreated(E_PaymentType type, Integer relatedId,
-                                      Integer quantity, Integer goodId, Integer userId) {
+    public void notifyPaymentCreated(E_PaymentType type, Integer relatedId,
+                                     Integer quantity, Integer goodId, Integer userId) {
         PaymentInfo info = new PaymentInfo(relatedId, goodId, quantity, E_PaymentStatus.IDLE, userId, null);
 
         switch (type) {
@@ -150,6 +154,10 @@ public class PaymentServiceImpl implements PaymentService {
     public boolean refundPayment(String orderNumber, Object data) {
         // 检查当前状态是否为COMPLETED(且不是FINISHED)
         payment payment = paymentMapper.selectByOrderNumber(orderNumber);
+
+        System.out.println(payment);
+        System.out.println(orderNumber);
+
         if (payment == null ||
                 payment.getStatus() != E_PaymentStatus.COMPLETED) {
             return false;

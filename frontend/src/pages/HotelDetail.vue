@@ -79,10 +79,10 @@ const router = useRouter()
 const hotel = ref(null)
 
 const goHome = () => router.push('/')
-const goBooking = () => router.push({ name: 'BookingForm', params: { bookingId: null, hotelId: hotel.value.id } })
+const goBooking = () => router.push({ name: 'BookingForm', params: { bookingId: null, hotelId: hotel.value.mealId } })
 
 onMounted(async () => {
-  const id = route.params.id
+  const id = route.params.mealId
   const res = await fetchHotelDetail(id)
   hotel.value = res.data || res
 })

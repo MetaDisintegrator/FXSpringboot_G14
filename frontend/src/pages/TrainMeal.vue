@@ -39,7 +39,7 @@
 
     <!-- 菜单展示 -->
     <div v-else-if="menu.length" class="menu-list">
-      <div class="meal-card" v-for="item in menu" :key="item.id">
+      <div class="meal-card" v-for="item in menu" :key="item.mealId">
         <div class="info">
           <h4 class="meal-name">{{ item.name }}</h4>
           <p class="meal-desc">{{ item.description }}</p>
@@ -73,10 +73,9 @@ const { id, username } = storeToRefs(userStore)
 const menu = ref([])
 const loading = ref(false)
 
-// 获取当前座位订单ID
-const getCurrentTrainId = () => {
-  return localStorage.getItem('currestTrainId')
-}
+// 获取当前关联订单
+const trainId = localStorage.getItem('currestTrainId')
+const seatOrderId = localStorage.getItem('currentSeatOrderId')
 
 // 新增：响应式数据
 const trainInfo = ref(null)
@@ -112,7 +111,6 @@ const goBack = () => {
 
 // 获取菜单
 const getMenu = async () => {
-  const trainId = getCurrentTrainId()
   if (!trainId) {
     alert('未找到当前座位订单信息')
     return
@@ -150,18 +148,32 @@ const getMenu = async () => {
 // 提交订餐
 const submitOrder = async (item) => {
   try {
+    console.log(id)
     const payload = {
-      userId: id,
-      ticketReservationId: getCurrentTrainId(),
+      userId: userStore.id,
+      ticketReservationId: seatOrderId,
       trainMealId: item.id,
       quantity: 1
     }
     console.log('[MealOrder] startPayment 参数 →', payload)
-    await startPayment(payload)
-    alert('订餐成功！')
+    const { data } = await startPayment(payload)
+
+    const orderId = data.id
+    const orderNumber = data.number
+
+    await router.push({name: 'MealPurchase',
+      query: {
+        mealId: item.id,
+        orderId: orderId,
+        orderNumber: orderNumber,
+        trainNumber: trainInfo.value.trainNumber,
+        name: item.name,
+        description: item.description,
+        price: item.price.toFixed(2)
+    }})
   } catch (err) {
     console.error('[MealOrder] 订餐失败 →', err)
-    alert(err.message || '订餐失败，请重试')
+    alert('订餐失败,请先在列车上购票');
   }
 }
 

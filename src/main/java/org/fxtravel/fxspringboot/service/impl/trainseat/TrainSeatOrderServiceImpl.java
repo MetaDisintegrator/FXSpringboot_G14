@@ -58,7 +58,7 @@ public class TrainSeatOrderServiceImpl implements TrainSeatOrderService {
 
     @Override
     public boolean existsByTrainAndUser(Integer trainId, Integer userId) {
-        return trainSeatOrderMapper.existsBySeatAndUser(trainId, userId);
+        return trainSeatOrderMapper.existsByTrainAndUser(trainId, userId);
     }
 
     @Override

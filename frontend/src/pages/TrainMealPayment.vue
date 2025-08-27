@@ -1,19 +1,17 @@
-<!-- src/pages/TrainBooking.vue -->
+<!-- src/pages/TrainMealPayment.vue -->
 <template>
-  <div class="booking-page">
-    <div class="booking-card">
-      <h2>订单支付</h2>
+  <div class="payment-page">
+    <div class="payment-card">
+      <h2>餐食订单支付</h2>
 
       <!-- 订单信息展示 -->
       <div class="info">
         <p><strong>订单编号：</strong>{{ orderNumber }}</p>
-        <p><strong>车次：</strong>{{ trainNumber }}</p>
-        <p><strong>出发城市：</strong>{{ from }}</p>
-        <p><strong>到达城市：</strong>{{ to }}</p>
-        <p><strong>出发时间：</strong>{{ formatDateTime(departTime) }}</p>
-        <p><strong>到达时间：</strong>{{ formatDateTime(arriveTime) }}</p>
-        <p><strong>座席：</strong>{{ seat }}</p>
-        <p><strong>票价：</strong>{{ price }} 元</p>
+        <p><strong>车次：</strong>{{ trainInfo.trainNumber }}</p>
+        <p><strong>餐品名称：</strong>{{ mealInfo.name }}</p>
+        <p><strong>餐品描述：</strong>{{ mealInfo.description }}</p>
+        <p><strong>单价：</strong>{{ mealInfo.price }} 元</p>
+        <p><strong>数量：</strong>1</p>
         <p v-if="remainingTime > 0" class="time-remaining">
           <strong>剩余支付时间：</strong>
           <span :class="{ 'text-danger': remainingTime < 30 }">
@@ -25,24 +23,25 @@
       <hr />
 
       <div class="payment-actions">
-        <p class="total">应付金额：<span>{{ price }} 元</span></p>
+        <p class="total">应付金额：<span>{{ mealInfo.price }} 元</span></p>
         <div class="buttons">
-          <el-button
-              type="primary"
-              :loading="payLoading"
+          <button
+              class="pay-btn"
+              :disabled="payLoading"
               @click="handlePayment"
           >
-            立即支付
-          </el-button>
-          <el-button
-              :loading="cancelLoading"
+            {{ payLoading ? '支付中...' : '立即支付' }}
+          </button>
+          <button
+              class="cancel-btn"
+              :disabled="cancelLoading"
               @click="handleCancel"
           >
-            放弃支付
-          </el-button>
+            {{ cancelLoading ? '取消中...' : '放弃支付' }}
+          </button>
         </div>
         <div v-if="pollingMessage" class="status-message">
-          <i class="el-icon-loading" v-if="isPolling"></i>
+          <span v-if="isPolling" class="loading-icon">⏳</span>
           {{ pollingMessage }}
         </div>
       </div>
@@ -53,52 +52,41 @@
 <script setup>
 import {ref, onMounted, onUnmounted, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { complete, fail } from '../api/pay'
-import { doAsync } from '../api/train'
+import {doAsync} from "../api/trainMeal.js";
+import {complete, fail} from "../api/pay.js";
+import {ElMessage} from "element-plus";
 
 const route = useRoute()
 const router = useRouter()
 
 // 订单数据
-const orderNumber = ref(route.query.number || '')
-const id = ref(route.query.id || '')
-const trainId = ref(route.query.trainId || '')
-const trainNumber = ref(route.query.trainNumber || '')
-const from = ref(route.query.from || '')
-const to = ref(route.query.to || '')
-const departTime = ref(route.query.departTime || '')
-const arriveTime = ref(route.query.arriveTime || '')
-const seat = ref(route.query.seat || '')
-const price = ref(Number(route.query.price) || 0)
+const trainInfo = ref({
+  trainNumber: route.query.trainNumber || ''
+})
+const mealInfo = ref({
+  mealId: route.query.mealId || '',
+  name: route.query.name || '暂无名称',
+  description: route.query.description || '暂无描述',
+  price: route.query.price || 0
+})
+
+const id = ref(route.query.orderId || 0)
+const orderNumber = ref(route.query.orderNumber || '')
 
 // 状态控制
 const payLoading = ref(false)
 const cancelLoading = ref(false)
 const pollingInterval = ref(null)
+const remainingTime = ref(400) // 5分钟支付时限
 const pollingMessage = ref('')
-const remainingTime = ref(400) // 默认5分钟支付时限
 const isPolling = ref(false)
 
-// 方案1：确保 onMounted 触发
+// 生命周期
 onMounted(() => {
-  console.log('组件挂载，开始轮询')
   startPolling()
 })
 
 startPolling()
-
-// 方案2：监听路由参数变化（可选）
-watch(
-    () => route.query.id,
-    (newId) => {
-      if (newId && newId !== id.value) {
-        id.value = newId
-        stopPolling()
-        startPolling()
-      }
-    }
-)
 
 // 轮询控制
 function startPolling() {
@@ -161,7 +149,7 @@ async function handlePayment() {
 async function handleCancel() {
   cancelLoading.value = true
   try {
-    await fail({ orderNumber: orderNumber.value , data: seat.value })
+    await fail({ orderNumber: orderNumber.value })
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '取消失败')
   } finally {
@@ -172,14 +160,9 @@ async function handleCancel() {
 // 支付成功处理
 function handlePaymentSuccess() {
   stopPolling()
-  localStorage.setItem('currestTrainId', trainId.value)
-  localStorage.setItem('currentSeatOrderId', id.value)
   pollingMessage.value = '支付成功，正在跳转...'
   setTimeout(() => {
-    router.push({
-      name: 'BookingSuccess',
-      query: { orderNumber: orderNumber.value }
-    })
+    router.push({ name: 'HotelHome' })
   }, 1500)
 }
 
@@ -193,12 +176,6 @@ async function handlePaymentFailure(message) {
 }
 
 // 格式化时间
-function formatDateTime(isoString) {
-  if (!isoString) return '--:--'
-  const d = new Date(isoString)
-  return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
-}
-
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
@@ -207,29 +184,32 @@ function formatTime(seconds) {
 </script>
 
 <style scoped>
-.booking-page {
+.payment-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 90vh;
-  background: linear-gradient(to right, #f5f7fa, #e4e8eb);
+  background: #f5f7fa;
+  padding: 20px;
 }
 
-.booking-card {
+.payment-card {
   background: white;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 400px;
+  width: 100%;
+  max-width: 500px;
 }
 
 .info p {
-  margin: 8px 0;
+  margin: 10px 0;
   font-size: 15px;
+  line-height: 1.5;
 }
 
 .time-remaining {
-  margin-top: 12px;
+  margin-top: 15px;
   color: #666;
 }
 
@@ -239,35 +219,88 @@ function formatTime(seconds) {
 }
 
 .payment-actions {
-  margin-top: 20px;
+  margin-top: 25px;
 }
 
 .total {
   font-size: 18px;
   margin-bottom: 20px;
+  text-align: right;
 }
 
 .total span {
   color: #409eff;
   font-weight: bold;
+  font-size: 20px;
 }
 
 .buttons {
   display: flex;
-  gap: 12px;
+  gap: 15px;
+  margin-top: 20px;
 }
 
-.buttons .el-button {
+.pay-btn, .cancel-btn {
   flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pay-btn {
+  background: #409eff;
+  color: white;
+  border: none;
+}
+
+.pay-btn:hover:not(:disabled) {
+  background: #3080e0;
+}
+
+.pay-btn:disabled {
+  background: #a0c9ff;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #e5e5e5;
+}
+
+.cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .status-message {
-  margin-top: 12px;
+  margin-top: 15px;
   color: #666;
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  text-align: center;
+  min-height: 20px;
+}
+
+.loading-icon {
+  display: inline-block;
+  margin-right: 5px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
 }
 </style>

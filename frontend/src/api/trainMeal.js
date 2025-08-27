@@ -15,6 +15,6 @@ export const searchTrainMealOrderBySeatOrder = (seatOrderId) => request.get(`tra
 
 export const startPayment = (params) => request.post('/train/meal/get', params)
 
-export const doAsync = (orderId) => request.get('/train/meal/status', { params: orderId} )
+export const doAsync = (orderId) => request.get(`/train/meal/status/${orderId}`)
 
 export const refundMeal = (params) => request.post(`train/meal/refund`, params)

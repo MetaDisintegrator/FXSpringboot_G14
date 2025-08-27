@@ -35,7 +35,7 @@ public class RoomOrder {
     private E_PaymentStatus status;// 订单状态
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;// 订单总⾦额（元）
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime; // 创建时间
     @Column(name = "related_payment_id")
     private Integer relatedPaymentId;// 关联支付系统

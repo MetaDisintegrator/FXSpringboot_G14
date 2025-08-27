@@ -1,4 +1,4 @@
-<!-- src/pages/TrainBooking.vue -->
+<!-- src/pages/HotelBooking.vue -->
 <template>
   <div class="booking-page">
     <div class="booking-card">
@@ -7,13 +7,13 @@
       <!-- 订单信息展示 -->
       <div class="info">
         <p><strong>订单编号：</strong>{{ orderNumber }}</p>
-        <p><strong>车次：</strong>{{ trainNumber }}</p>
-        <p><strong>出发城市：</strong>{{ from }}</p>
-        <p><strong>到达城市：</strong>{{ to }}</p>
-        <p><strong>出发时间：</strong>{{ formatDateTime(departTime) }}</p>
-        <p><strong>到达时间：</strong>{{ formatDateTime(arriveTime) }}</p>
-        <p><strong>座席：</strong>{{ seat }}</p>
-        <p><strong>票价：</strong>{{ price }} 元</p>
+        <p><strong>酒店：</strong>{{ name }}</p>
+        <p><strong>所在城市：</strong>{{ destination }}</p>
+        <p><strong>详细地址：</strong>{{ address }}</p>
+        <p><strong>房型：</strong>{{ roomName }}</p>
+        <p><strong>入住日期：</strong>{{ formatDateTime(checkInDate) }}</p>
+        <p><strong>离店日期：</strong>{{ formatDateTime(checkOutDate) }}</p>
+        <p><strong>每晚价格：</strong>{{ pricePerNight }} 元</p>
         <p v-if="remainingTime > 0" class="time-remaining">
           <strong>剩余支付时间：</strong>
           <span :class="{ 'text-danger': remainingTime < 30 }">
@@ -25,7 +25,7 @@
       <hr />
 
       <div class="payment-actions">
-        <p class="total">应付金额：<span>{{ price }} 元</span></p>
+        <p class="total">应付金额：<span>{{ totalAmount }} 元</span></p>
         <div class="buttons">
           <el-button
               type="primary"
@@ -55,7 +55,7 @@ import {ref, onMounted, onUnmounted, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { complete, fail } from '../api/pay'
-import { doAsync } from '../api/train'
+import { doAsync } from '../api/hotel.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,14 +63,14 @@ const router = useRouter()
 // 订单数据
 const orderNumber = ref(route.query.number || '')
 const id = ref(route.query.id || '')
-const trainId = ref(route.query.trainId || '')
-const trainNumber = ref(route.query.trainNumber || '')
-const from = ref(route.query.from || '')
-const to = ref(route.query.to || '')
-const departTime = ref(route.query.departTime || '')
-const arriveTime = ref(route.query.arriveTime || '')
-const seat = ref(route.query.seat || '')
-const price = ref(Number(route.query.price) || 0)
+const name = ref(route.query.name || '')
+const destination = ref(route.query.destination || '')
+const address = ref(route.query.address || '')
+const roomName = ref(route.query.roomName || '')
+const checkInDate = ref(route.query.checkInDate || '')
+const checkOutDate = ref(route.query.checkOutDate || '')
+const pricePerNight = ref(route.query.pricePerNight || '')
+const totalAmount = ref(route.query.totalAmount || '')
 
 // 状态控制
 const payLoading = ref(false)
@@ -161,7 +161,7 @@ async function handlePayment() {
 async function handleCancel() {
   cancelLoading.value = true
   try {
-    await fail({ orderNumber: orderNumber.value , data: seat.value })
+    await fail({ orderNumber: orderNumber.value })
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '取消失败')
   } finally {
@@ -172,13 +172,10 @@ async function handleCancel() {
 // 支付成功处理
 function handlePaymentSuccess() {
   stopPolling()
-  localStorage.setItem('currestTrainId', trainId.value)
-  localStorage.setItem('currentSeatOrderId', id.value)
   pollingMessage.value = '支付成功，正在跳转...'
   setTimeout(() => {
     router.push({
-      name: 'BookingSuccess',
-      query: { orderNumber: orderNumber.value }
+      name: 'HotelHome'
     })
   }, 1500)
 }

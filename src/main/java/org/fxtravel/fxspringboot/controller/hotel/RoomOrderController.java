@@ -54,14 +54,15 @@ public class RoomOrderController {
             RoomOrder order = roomOrderService.createOrder(request);
 
             return ResponseEntity.ok(Map.of(
-                    "message", "车票生成成功",
+                    "message", "预订酒店成功",
                     "id", order.getId(),
                     "number", order.getOrderNumber(),
-                    "roomId", order.getRoomId()
+                    "roomId", order.getRoomId(),
+                    "totalAmount", order.getTotalAmount()
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "生成车票失败: " + e.getMessage()));
+                    .body(Map.of("error", "预订酒店失败: " + e.getMessage()));
         }
     }
 
@@ -75,12 +76,7 @@ public class RoomOrderController {
         PaymentResultDTO result = order.getRelatedPaymentId() != null ?
                 paymentService.checkPaymentStatus(order.getRelatedPaymentId()) : null;
 
-        return ResponseEntity.ok(Map.of(
-                "message", "房间预订成功",
-                "id", order.getId(),
-                "number", order.getOrderNumber(),
-                "room", order.getRoomId()
-        ));
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/orders/{userId}")

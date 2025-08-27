@@ -7,7 +7,7 @@
     <div v-else class="train-list-wrapper">
       <TrainCard
           v-for="item in trains"
-          :key="item.train.id"
+          :key="item.train.mealId"
           :train="item.train"
           :seats="item.trainseats"
           class="train-item"

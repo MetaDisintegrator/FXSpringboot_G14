@@ -6,7 +6,7 @@
     <!-- 返回按钮 -->
     <div class="back-button-container">
       <el-button type="primary" @click="goBack" class="back-button">
-        返回
+        返回主页
       </el-button>
     </div>
     <!-- 🔍 筛选工具条 -->
@@ -39,6 +39,7 @@
               </p>
               <p><strong>车型：</strong>{{ order.train.trainType }}</p>
               <p><strong>座位类型：</strong>{{ order.trainSeat.seatType }}</p>
+              <p><strong>座位号：</strong>{{ order.seatNumber }}</p>
               <p><strong>状态：</strong>{{ formatStatus(order.status) }}</p>
             </div>
             <div class="actions">
@@ -48,7 +49,7 @@
               <el-button
                   size="small"
                   type="warning"
-                  @click="goToMeal(order.train.trainNumber)"
+                  @click="goToMeal(order)"
               >订餐</el-button
               >
               <el-button
@@ -171,7 +172,7 @@ const selectedStatus = ref('')
 const dateRange = ref([])
 
 const goBack=()=>{
-  window.location.href = 'http://localhost:5173/';
+  router.push({name: 'HotelHome'});
 }
 // 格式化函数
 const formatTime = dt => new Date(dt).toLocaleString()
@@ -229,10 +230,11 @@ const copyMeal = meal => {
 }
 
 // 跳转订餐
-function goToMeal(trainNumber) {
+function goToMeal(order) {
+  localStorage.setItem('currestTrainId', order.train.id)
+  localStorage.setItem('currentSeatOrderId', order.id)
   router.push({
-    name: 'TrainMeal',
-    query: { trainNumber: trainNumber }
+    name: 'TrainMeal'
   })
 }
 
@@ -240,7 +242,10 @@ async function refundSeatOrder(seatOrder) {
   console.log('开始退款操作');
   
   try {
-    const response = await refundSeat(seatOrder);
+    const response = await refundSeat({
+      orderNumber: seatOrder.orderNumber,
+      data: seatOrder.seatNumber
+    });
     console.log('退款结果:', response);
 
     const result = response.data;
@@ -251,15 +256,11 @@ async function refundSeatOrder(seatOrder) {
       window.location.reload();
     } else if (result === false) {
       console.log('退款失败');
-      alert('退款失败，请稍后重试');
-      
-    } else {
-      console.log('未知返回值:', result);
-      alert('退款状态未知');
+      alert('退款失败');
     }
   } catch (error) {
-    console.error('退款异常:', error);
-    alert('退款操作异常，请稍后重试');
+    console.error('退款异常:', error.response.data.error);
+    alert('退款操作异常,请检查是否有未取消餐品');
   } finally {
     fetchOrders;
   }
@@ -297,7 +298,7 @@ async function refundRoomOrder(roomOrder) {
   console.log('开始退款操作');
   
   try {
-    const response = await refundRoom(roomOrder);
+    const response = await refundRoom({orderNumber: roomOrder.orderNumber});
     console.log('退款结果:', response);
 
     const result = response.data;

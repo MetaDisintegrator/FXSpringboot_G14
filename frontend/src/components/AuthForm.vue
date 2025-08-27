@@ -88,7 +88,7 @@ const buttonTextMap = {
 
 const showField = (field) => {
   const fieldsMap = {
-    login: ['username', 'password'],
+    login: ['email', 'password'],
     register: ['email', 'username', 'password', 'confirmPassword', 'gender']
   }
   return fieldsMap[props.type].includes(field)
@@ -127,7 +127,7 @@ const handleSubmit = async () => {
     if (props.type === 'login') {
       // 直接调用userStore.login（不再单独调用API）
       const success = await userStore.login({
-        email: username.value,
+        email: email.value,
         password: password.value
       })
       if (success) {

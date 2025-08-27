@@ -2,12 +2,14 @@ package org.fxtravel.fxspringboot.controller.trainmeal;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.fxtravel.fxspringboot.common.E_PaymentStatus;
 import org.fxtravel.fxspringboot.mapper.trainmeal.TrainMealMapper;
 import org.fxtravel.fxspringboot.mapper.trainseat.TrainSeatOrderMapper;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentRequest;
 import org.fxtravel.fxspringboot.pojo.dto.payment.PaymentResultDTO;
 import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderDTO;
 import org.fxtravel.fxspringboot.pojo.dto.trainmeal.TrainMealOrderResponse;
+import org.fxtravel.fxspringboot.pojo.entities.TrainSeatOrder;
 import org.fxtravel.fxspringboot.pojo.entities.User;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMeal;
 import org.fxtravel.fxspringboot.pojo.entities.trainmeal.TrainMealOrder;
@@ -60,7 +62,7 @@ public class TrainMealOrderController {
                     order.getQuantity(),
                     order.getTotalAmount(),
                     trainMealMapper.selectById(order.getTrainMealId()).getName(),
-                    order.getOrderNumber(),
+                    trainSeatOrderMapper.selectById(order.getSeatOrderId()).getOrderNumber(),
                     order.getStatus(),
                     order.getCreateTime()
             );
@@ -96,9 +98,15 @@ public class TrainMealOrderController {
         ResponseEntity<? extends Map<String, ?>> errors = AuthUtil.check(bindingResult, user);
         if (errors != null) return errors;
 
+        TrainSeatOrder seat = trainSeatOrderMapper.selectById(orderDTO.getTicketReservationId());
+        if (seat == null || seat.getStatus() != E_PaymentStatus.COMPLETED) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", "未在对应列车上购票"));
+        }
+
         // 必须有购票
         TrainMeal meal = trainMealService.getMealById(orderDTO.getTrainMealId());
-        if (!trainSeatOrderMapper.existsBySeatAndUser(meal.getId(), user.getId())) {
+        if (!trainSeatOrderMapper.existsByTrainAndUser(meal.getTrainId(), user.getId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "error", "未在对应列车上购票"));
         }

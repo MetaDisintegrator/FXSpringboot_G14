@@ -18,7 +18,10 @@ import org.fxtravel.fxspringboot.service.inter.hotel.HotelService;
 import org.fxtravel.fxspringboot.service.inter.hotel.RoomOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -37,13 +40,13 @@ public class RoomOrderServiceImpl implements RoomOrderService {
     @PostConstruct
     public void init() {
         // 注册回调，确保在服务启动时就注册
-        eventCenter.subscribe(EventType.TM_STATUS_CHANGED, this::handlePaymentStatusChange);
+        eventCenter.subscribe(EventType.HT_STATUS_CHANGED, this::handlePaymentStatusChange);
     }
 
     @PreDestroy
     public void destroy() {
         // 服务关闭时注销回调
-        eventCenter.unsubscribe(EventType.TM_STATUS_CHANGED, this::handlePaymentStatusChange);
+        eventCenter.unsubscribe(EventType.HT_STATUS_CHANGED, this::handlePaymentStatusChange);
     }
 
     // 处理支付状态变更的回调方法
@@ -63,38 +66,54 @@ public class RoomOrderServiceImpl implements RoomOrderService {
 
     @Override
     public RoomOrder createOrder(BookHotelRequest request) {
+        // 1. 基础验证
         Hotel hotel = hotelService.getHotelById(request.getHotelId());
         Room room = hotelService.getRoomById(request.getRoomId());
         if (hotel == null || room == null) {
-            throw new IllegalArgumentException("hotel or room not found");
+            throw new IllegalArgumentException("酒店或房型不存在");
         }
 
+        // 2. 计算入住天数和总价
+        long nights = ChronoUnit.DAYS.between(
+                request.getCheckInDate(),
+                request.getCheckOutDate()
+        );
+        Double totalAmount = room.getPricePerNight() * nights;
+
+        // 3. 创建订单
         RoomOrder order = new RoomOrder();
         order.setUserId(request.getUserId());
         order.setHotelId(request.getHotelId());
         order.setRoomId(request.getRoomId());
         order.setCheckInDate(request.getCheckInDate());
         order.setCheckOutDate(request.getCheckOutDate());
-        order.setTotalAmount(room.getPricePerNight());
+        order.setTotalAmount(totalAmount);  // 使用计算后的总价
         order.setCreateTime(LocalDateTime.now());
         order.setStatus(E_PaymentStatus.IDLE);
         roomOrderMapper.insert(order);
 
+        // 4. 创建支付记录
         payment payment = paymentService.createPayment(
                 order.getUserId(),
                 E_PaymentType.HOTEL,
-                order.getTotalAmount(),
+                order.getTotalAmount(),  // 传递计算后的总价
                 order.getId(),
                 1,
                 room.getId()
         );
 
+        // 5. 更新订单支付信息
         order.setRelatedPaymentId(payment.getId());
         order.setOrderNumber(payment.getOrderNumber());
         roomOrderMapper.updateById(order);
 
-        paymentService.simulatePaymentProcess(payment.getOrderNumber(), 30,
-                () -> hotelService.checkAndGet(room.getId(), 1, null), () -> null);
+        // 6. 模拟支付流程（保持原有逻辑）
+        paymentService.simulatePaymentProcess(
+                payment.getOrderNumber(),
+                30,
+                () -> hotelService.checkAndGet(room.getId(), 1, null),
+                () -> null
+        );
 
         return order;
     }

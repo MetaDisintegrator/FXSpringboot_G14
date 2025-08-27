@@ -1,0 +1,25 @@
+name: Maven CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v4
+
+      # 设置JDK（默认使用最新LTS版本，可根据需要修改）
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'  # 自动缓存Maven依赖
+
+      # 编译并运行测试
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml

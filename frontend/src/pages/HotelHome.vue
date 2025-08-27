@@ -73,7 +73,7 @@
               <div class="hotel-list">
                 <div
                   v-for="hotel in filteredHotels"
-                  :key="hotel.id"
+                  :key="hotel.mealId"
                   class="hotel-card">
                   <img :src="hotel.img" class="hotel-img" />
                   <div class="hotel-info">
@@ -92,7 +92,7 @@
         <aside class="rightbar">
           <div class="rank-title">北京酒店口碑榜</div>
           <div class="rank-list">
-            <div class="rank-item" v-for="item in rankHotels" :key="item.id">
+            <div class="rank-item" v-for="item in rankHotels" :key="item.mealId">
               <img :src="item.img" class="rank-img" />
               <div class="rank-info">
                 <div class="rank-name">{{ item.name }}</div>
@@ -178,7 +178,7 @@ const setCity = city => (currentCity.value = city)
 
 const hotels = ref([
   {
-    id: 1,
+    mealId: 1,
     city: '上海',
     name: '上海吉臣维景酒店',
     stars: 4,
@@ -186,7 +186,7 @@ const hotels = ref([
     img: '../public/images/weijing.png'
   },
   {
-    id: 2,
+    mealId: 2,
     city: '上海',
     name: '上海陆家嘴酒店',
     stars: 5,
@@ -194,7 +194,7 @@ const hotels = ref([
     img: '../public/images/lujiazuiHotel.png'
   },
   {
-    id: 3,
+    mealId: 3,
     city: '上海',
     name: '上海徐家汇禧玥酒店',
     stars: 3,
@@ -202,7 +202,7 @@ const hotels = ref([
     img: '../public/images/xujiahuiHotel.webp'
   },
   {
-    id: 4,
+    mealId: 4,
     city: '北京',
     name: '北京王府井希尔顿酒店',
     stars: 5,
@@ -210,7 +210,7 @@ const hotels = ref([
     img: '../public/images/huaerdaofu.png'
   },
   {
-    id: 5,
+    mealId: 5,
     city: '广州',
     name: '广州天河希尔顿酒店',
     stars: 5,
@@ -218,7 +218,7 @@ const hotels = ref([
     img: '../public/images/bandao.webp'
   },
   {
-    id: 6,
+    mealId: 6,
     city: '三亚',
     name: '三亚中心皇冠假日酒店',
     stars: 5,
@@ -230,19 +230,19 @@ const filteredHotels = computed(() => hotels.value.filter(h => h.city === curren
 
 const rankHotels = [
   {
-    id: 1,
+    mealId: 1,
     name: '君悦大酒店',
     price: 2484,
     img: '../public/images/wangfujing.webp'
   },
   {
-    id: 2,
+    mealId: 2,
     name: '华尔道夫酒店',
     price: 2899,
     img: '../public/images/huaerdaofu.png'
   },
   {
-    id: 3,
+    mealId: 3,
     name: '皇冠假日酒店',
     price: 1498,
     img: '../public/images/crown.png'
