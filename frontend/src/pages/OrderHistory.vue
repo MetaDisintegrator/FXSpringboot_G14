@@ -6,7 +6,7 @@
     <!-- 返回按钮 -->
     <div class="back-button-container">
       <el-button type="primary" @click="goBack" class="back-button">
-        返回
+        返回主页
       </el-button>
     </div>
     <!-- 🔍 筛选工具条 -->
@@ -172,7 +172,7 @@ const selectedStatus = ref('')
 const dateRange = ref([])
 
 const goBack=()=>{
-  router.push({name: "HotelHome"});
+  router.push({name: 'HotelHome'});
 }
 // 格式化函数
 const formatTime = dt => new Date(dt).toLocaleString()
