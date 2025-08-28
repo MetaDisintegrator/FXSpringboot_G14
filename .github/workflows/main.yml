@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+#后端测试：
     steps:
       # 检出代码
       - uses: actions/checkout@v4
@@ -23,3 +23,22 @@ jobs:
       # 编译并运行测试
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+
+#前端测试
+      # 设置 Node.js 环境
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # 安装前端依赖
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # 运行前端测试
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm run test:run

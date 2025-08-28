@@ -105,7 +105,7 @@ const selectCity = (data) => {
   } else if (field === 'to') {
     toCity.value = city
   }
-  
+
   // 关闭城市选择器
   closeCitySelect()
 }
