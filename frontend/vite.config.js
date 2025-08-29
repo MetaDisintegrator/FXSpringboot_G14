@@ -10,12 +10,11 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, 'src') }
   },
   server: {
-    host: true,
     proxy: {
-      '^/api': {  // 匹配所有以 /api 开头的请求
-        target: 'http://localhost:8080',  // 后端地址
+      '^/api': {
+        target: 'http://192.168.184.131:30001/api', // 保留后端需要的 /api 前缀
         changeOrigin: true,
-        rewrite: (path) => path // 不需要重写路径（前后端路径一致）
+        rewrite: (path) => path.replace(/^\/api/, '') // 仅移除前端请求的 /api 前缀
       }
     }
   }

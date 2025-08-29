@@ -6,29 +6,13 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
   application:
     name: FXTravel
-#  datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    # url: jdbc:mysql://localhost:3306/fxtravel_g14?serverTimezone=UTC
-#    url: jdbc:mysql://localhost:3306/fxtravel_g14?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&autoReconnect=true
-#    username: 'root'
-#    # password: 'ss72ss05yy06'
-##    password: 'yyyYYY&0121'
-#    password: 'ehern030121'
-#    hikari:
-#      username: 'root'
-#      # password: 'ss72ss05yy06'
-##      password: 'yyyYYY&0121'
-#      password: 'ehern030121'
-#      driver-class-name: com.mysql.cj.jdbc.Driver
-#      maximum-pool-size: 3000
-#      minimum-idle: 10
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://fx-mysql-service:3306/fx_db?allowPublicKeyRetrieval=true&useSSL=false
-    username: 'fx_remote'
+    username: 'root'
     password: 'yyyYYY&0121'
     hikari:
-      username: 'fx_remote'
+      username: 'root'
       password: 'yyyYYY&0121'
       driver-class-name: com.mysql.cj.jdbc.Driver
       maximum-pool-size: 3000
@@ -61,6 +45,8 @@ spring:
         [
           'http://localhost:5173/',
           'http://10.193.185.196:5173/',
+          'http://fx-frontend:80',
+          'http://fx-frontend-service:80',
           '*'
-              ]
+        ]
       allowed-methods: ['GET','POST','DELETE','PUT','OPTIONS']

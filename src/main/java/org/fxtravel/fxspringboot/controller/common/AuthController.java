@@ -19,6 +19,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerAccount(@RequestBody RegisterRequest request, HttpSession session) {
+        System.out.println(request);
         User user = userService.register(request);
 
         session.setAttribute("user", user);

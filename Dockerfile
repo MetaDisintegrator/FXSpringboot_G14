@@ -1,11 +1,14 @@
-# 使用轻量级JDK17基础镜像（仅包含JRE，适合生产环境）
+# 使用轻量级JDK17基础镜像
 FROM openjdk:17
 
-# 将构建的JAR包复制到镜像中（假设JAR包位于target目录）
+# 将构建的JAR包复制到镜像中
 COPY target/*.jar fx-app.jar
 
-# 暴露应用端口（根据实际端口修改）
-EXPOSE 80
+# 复制配置文件到镜像中
+COPY src/main/resources/application-local.yml ./config/application-local.yml
+
+# 暴露应用端口
+EXPOSE 8080
 
 # 启动命令
-ENTRYPOINT ["java", "-jar", "fx-app.jar"]
+ENTRYPOINT ["java", "-jar", "fx-app.jar", "--spring.profiles.active=local", "--spring.config.import=optional:file:./config/"]
