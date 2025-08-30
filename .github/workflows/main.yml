@@ -43,6 +43,8 @@ jobs:
         run: |
           cd "D:\Datas\repo\FXSpringboot"
           git checkout master
+          git reset --hard HEAD
+          git clean -fd
           git pull remote master
 
       - name: Execute Deployment Script
