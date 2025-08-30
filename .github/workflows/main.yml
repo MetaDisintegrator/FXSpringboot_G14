@@ -7,25 +7,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-#后端测试：
     steps:
-      # 检出代码
       - uses: actions/checkout@v4
 
-      # 设置JDK（默认使用最新LTS版本，可根据需要修改）
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'  # 自动缓存Maven依赖
+          cache: 'maven'
 
-      # 编译并运行测试
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-#前端测试
-      # 设置 Node.js 环境
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,12 +27,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      # 安装前端依赖
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
 
-      # 运行前端测试
       - name: Run frontend tests
         working-directory: ./frontend
         run: npm run test:run
@@ -49,14 +41,22 @@ jobs:
     env:
       IMAGE_TAG: ${{ github.run_number }}
     steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Setup SSH Keys
+      - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}  # 提前配置好的SSH私钥
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Execute Deployment Script
         shell: bash
-        run: ..\..\deploy.sh
+        run: ../../deploy.sh
