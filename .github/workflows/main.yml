@@ -39,14 +39,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Pull latest changes
-        shell: bash
+        shell: cmd
         run: |
           cd "D:\Datas\repo\FXSpringboot"
           git checkout master
           git pull origin master
 
       - name: Execute Deployment Script
-        shell: bash
+        shell: cmd
         run: |
           cd "D:\Datas\repo\FXSpringboot"
           ./deploy.sh
