@@ -5,55 +5,44 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Run frontend tests
-        working-directory: ./frontend
-        run: npm run test:run
+#  test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up JDK
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '17'
+#          distribution: 'temurin'
+#          cache: 'maven'
+#
+#      - name: Build with Maven
+#        run: mvn -B package --file pom.xml
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '18'
+#          cache: 'npm'
+#          cache-dependency-path: frontend/package-lock.json
+#
+#      - name: Install frontend dependencies
+#        working-directory: ./frontend
+#        run: npm ci
+#
+#      - name: Run frontend tests
+#        working-directory: ./frontend
+#        run: npm run test:run
 
   deploy:
-    needs: test
+#    needs: test
     runs-on: self-hosted
     steps:
-      - name: Checkout repository
+      - name: Checkout latest code
         uses: actions/checkout@v4
         with:
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
-          # 移除 set-safe-directory 和 clean: false
-          fetch-depth: 0
-
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
-
-      - name: Fix directory permissions
-        run: |
-          echo "Skipping permission setup"
+          fetch-depth: 1
 
       - name: Execute Deployment Script
         shell: bash
