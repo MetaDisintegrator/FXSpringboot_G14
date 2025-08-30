@@ -39,19 +39,21 @@ jobs:
     needs: test
     runs-on: self-hosted
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
-          set-safe-directory: true
-          clean: false
+          # 移除 set-safe-directory 和 clean: false
           fetch-depth: 0
 
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Fix directory permissions
+        run: |
+          echo "Skipping permission setup"
 
       - name: Execute Deployment Script
         shell: bash
