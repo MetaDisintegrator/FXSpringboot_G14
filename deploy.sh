@@ -76,7 +76,7 @@ INNER_EOF
 EOF
 
 echo "========== 构建前端镜像 =========="
-docker build -t frontend:"$IMAGE_TAG" "$FRONTEND_DIR"
+docker build --build-arg VITE_API_URL=http://fx-backend-svc:8080 -t frontend:"$IMAGE_TAG" "$FRONTEND_DIR"
 
 echo "========== 保存镜像并清理本地 =========="
 docker save -o ./app_frontend.tar frontend:"$IMAGE_TAG"
