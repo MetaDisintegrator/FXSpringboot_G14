@@ -36,14 +36,17 @@ jobs:
 #        run: npm run test:run
 
   deploy:
-#    needs: test
     runs-on: self-hosted
     steps:
-      - name: Checkout latest code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+      - name: Pull latest changes
+        shell: bash
+        run: |
+          cd "D:\Datas\repo\FXSpringboot"
+          git checkout master
+          git pull origin master
 
       - name: Execute Deployment Script
         shell: bash
-        run: ./deploy.sh
+        run: |
+          cd "D:\Datas\repo\FXSpringboot"
+          ./deploy.sh
