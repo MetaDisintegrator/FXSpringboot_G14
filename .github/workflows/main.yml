@@ -44,7 +44,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
-          set-safe-directory: false
+          set-safe-directory: true
+          clean: false
           fetch-depth: 0
 
       - name: Setup SSH Agent
