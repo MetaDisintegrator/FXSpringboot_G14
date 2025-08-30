@@ -38,8 +38,6 @@ jobs:
   deploy:
     needs: test
     runs-on: self-hosted
-    env:
-      IMAGE_TAG: ${{ github.run_number }}
     steps:
 
       - name: Checkout repository
@@ -54,4 +52,4 @@ jobs:
 
       - name: Execute Deployment Script
         shell: bash
-        run: ../../deploy.sh
+        run: ./deploy.sh
