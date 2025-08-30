@@ -43,7 +43,7 @@ jobs:
         run: |
           cd "D:\Datas\repo\FXSpringboot"
           git checkout master
-          git pull origin master
+          git pull remote master
 
       - name: Execute Deployment Script
         shell: cmd
