@@ -41,11 +41,6 @@ jobs:
     env:
       IMAGE_TAG: ${{ github.run_number }}
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
 
       - name: Checkout repository
         uses: actions/checkout@v4
