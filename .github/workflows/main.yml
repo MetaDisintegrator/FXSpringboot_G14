@@ -51,4 +51,4 @@ jobs:
         shell: cmd
         run: |
           cd "D:\Datas\repo\FXSpringboot"
-          bash -c "./deploy.sh"
+          deploy.sh
