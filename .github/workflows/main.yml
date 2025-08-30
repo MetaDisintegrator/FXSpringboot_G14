@@ -1,11 +1,11 @@
-name: Maven CI
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 #后端测试：
     steps:
@@ -42,3 +42,21 @@ jobs:
       - name: Run frontend tests
         working-directory: ./frontend
         run: npm run test:run
+
+  deploy:
+    needs: test
+    runs-on: self-hosted
+    env:
+      IMAGE_TAG: ${{ github.run_number }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Keys
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}  # 提前配置好的SSH私钥
+
+      - name: Execute Deployment Script
+        shell: bash
+        run: ..\..\deploy.sh
