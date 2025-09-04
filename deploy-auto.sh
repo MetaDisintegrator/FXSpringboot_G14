@@ -70,7 +70,6 @@ ssh  $MAIN_NODE << EOF
         ssh \$node << 'INNER_EOF'
             docker rm -f $(docker ps -aq -f "ancestor=fx-backend") 2>/dev/null
             docker images fx-backend --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || echo "镜像清理失败"
-            docker image prune -f || echo "悬空镜像清理失败"
 INNER_EOF
     done
 EOF
@@ -109,18 +108,18 @@ ssh $MAIN_NODE << EOF
     kubectl apply -f $YAML_FRONTEND_PATH || echo "新部署应用失败"
 EOF
 
-echo "========== 清理所有节点的旧镜像 =========="
-ssh $MAIN_NODE << EOF
-    nodes=($worker_nodes_str)
-    for node in "\${nodes[@]}"; do
-        echo "正在清理节点: \$node"
-        ssh \$node << 'INNER_EOF'
-            docker rm -f $(docker ps -aq -f "ancestor=frontend") 2>/dev/null
-            docker images frontend --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || echo "镜像清理失败"
-            docker image prune -f || echo "悬空镜像清理失败"
-INNER_EOF
-    done
-EOF
+#echo "========== 清理所有节点的旧镜像 =========="
+#ssh $MAIN_NODE << EOF
+#    nodes=($worker_nodes_str)
+#    for node in "\${nodes[@]}"; do
+#        echo "正在清理节点: \$node"
+#        ssh \$node << 'INNER_EOF'
+#            docker rm -f $(docker ps -aq -f "ancestor=frontend") 2>/dev/null
+#            docker images frontend --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || echo "镜像清理失败"
+#            docker image prune -f || echo "悬空镜像清理失败"
+#INNER_EOF
+#    done
+#EOF
 
 echo "========== 部署结束 =========="
 echo "新镜像标签: $IMAGE_TAG"
